@@ -16,7 +16,7 @@ export default function Experience({ initialChapterId }) {
   const entered = Boolean(initialChapterId);
   const [flash, setFlash] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [dismissedCompletion, setDismissedCompletion] = useState("");
+  const [completionOpen, setCompletionOpen] = useState(false);
   const {
     authError,
     authLoading,
@@ -36,10 +36,6 @@ export default function Experience({ initialChapterId }) {
   const discoveredCount = chapters.filter((item) =>
     discovered.has(item.clueId),
   ).length;
-  const complete = chapters.every((item) => discovered.has(item.clueId));
-  const completionKey = complete
-    ? `${authUser?.uid || "local"}:${chapters.map((item) => item.clueId).join("-")}`
-    : "";
 
   useEffect(() => {
     if (!flash) return;
@@ -49,8 +45,13 @@ export default function Experience({ initialChapterId }) {
 
   function handleDiscover() {
     if (isDiscovered) return;
+    const completesExperience = chapters.every(
+      (item) => item.clueId === chapter.clueId || discovered.has(item.clueId),
+    );
+
     discover(chapter.clueId);
     setFlash(true);
+    if (completesExperience) setCompletionOpen(true);
   }
 
   function canOpen(index) {
@@ -70,6 +71,7 @@ export default function Experience({ initialChapterId }) {
   }
 
   async function handleReset() {
+    setCompletionOpen(false);
     try {
       await reset();
     } finally {
@@ -178,11 +180,11 @@ export default function Experience({ initialChapterId }) {
         <span>{new Date().toLocaleDateString("es-AR")}</span>
       </footer>
 
-      {complete && dismissedCompletion !== completionKey && (
+      {completionOpen && (
         <section className="completion" role="dialog" aria-modal="true">
           <button
             className="close"
-            onClick={() => setDismissedCompletion(completionKey)}
+            onClick={() => setCompletionOpen(false)}
             aria-label="Cerrar desenlace"
           >
             ×
